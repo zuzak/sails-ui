@@ -9,6 +9,8 @@ from gi.repository import Gdk
 from gi.repository import GLib
 import cairo
 
+import sailsd
+
 Keys = namedtuple('Keys', '''up down left right esc ctrl ctrl_right f11 space backtick''')
 KEYS = Keys(65362, 65364, 65361, 65363, 65307, 65507, 65508, 65480, 32, 96)
 
@@ -22,21 +24,6 @@ class Canvas(object):
 
     def __exit__(self, *args):
         self.context.restore()
-
-class Boat(object):
-    def __init__(self):
-        class Props(object):
-            def __init__(self):
-                self.width = 200
-                self.height = 100
-
-        self.props = Props()
-
-        self.x = 0
-        self.y = 0
-        self.angle = math.pi/4
-
-        self.velocity = 5
 
 
 class Wind(object):
@@ -170,8 +157,8 @@ class SimWindow(Gtk.Window):
         fields = [
                    'x',
                    'y',
-                   'angle',
-                   'velocity'
+                   'heading',
+                   'sail-angle'
                  ]
 
         with Canvas(cr):
@@ -235,7 +222,7 @@ class SimWindow(Gtk.Window):
 
         with Canvas(cr):
             cr.translate(self.boat.x * self.grid_spacing, -self.boat.y * self.grid_spacing)
-            cr.rotate(self.boat.angle-math.pi)
+            cr.rotate(self.boat.heading-(math.pi))
             cr.translate(-width/2, -height/2)
 
             cr.set_source_rgba(*self.color_boat_fill)
@@ -288,8 +275,7 @@ class SimWindow(Gtk.Window):
             self.draw_debug_pane(cr)
 
     def update_boat(self):
-        #self.boat.update(time.time())
-        self.boat.y += 0.01
+        self.boat.update()
         self.repaint()
         return True
 
@@ -299,12 +285,12 @@ if __name__ == '__main__':
     import os
     import json
 
-    boat = Boat()
+    boat = sailsd.Boat()
 
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     win = SimWindow(boat)
     win.connect('delete-event', Gtk.main_quit)
     win.show_all()
 
-    GLib.timeout_add(50, lambda: None)
+    #GLib.timeout_add(50, lambda: boat.update())
     Gtk.main()

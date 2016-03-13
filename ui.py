@@ -34,7 +34,7 @@ class Boat(object):
 
         self.x = 0
         self.y = 0
-        self.angle = 3.14
+        self.angle = math.pi/4
 
         self.velocity = 5
 
@@ -76,11 +76,13 @@ class SimWindow(Gtk.Window):
         self.grid_spacing = 100
         self.grid_n = self.grid_width / self.grid_spacing
 
-        self.color_background = (0.75, 0.87, 0.95, 1)
-        self.color_gridline   = (0.3,  0.3,  0.3,  1)
-        self.color_text       = (0,    0,    0,    1)
-        self.color_text_debug = (1,    1,    1,    1)
-        self.color_debug_pane = (0,    0,    0,    0.8)
+        self.color_background   = (0.75, 0.87, 0.95, 1)
+        self.color_gridline     = (0.3,  0.3,  0.3,  1)
+        self.color_text         = (0,    0,    0,    1)
+        self.color_text_debug   = (1,    1,    1,    1)
+        self.color_debug_pane   = (0,    0,    0,    0.8)
+        self.color_boat_fill    = (1,    0.41, 0.28, 1)
+        self.color_boat_stroke  = (0.32, 0.06, 0,   1)
         self.font = ('Sans', cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         self.font_debug = ('Monospace', cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
 
@@ -148,7 +150,7 @@ class SimWindow(Gtk.Window):
         elif k == KEYS.space:
             self.tracking_boat = not self.tracking_boat
             self.translation_x = -self.boat.x * self.grid_spacing
-            self.translation_y = -self.boat.y * self.grid_spacing
+            self.translation_y =  self.boat.y * self.grid_spacing
 
         elif k == KEYS.backtick:
             self.show_debug = not self.show_debug
@@ -221,22 +223,40 @@ class SimWindow(Gtk.Window):
             cr.stroke()
 
     def draw_boat(self, cr):
+        points = (
+                     (0, 0),
+                     (0, 150),
+                     (50, 200),
+                     (100, 150),
+                     (100, 0)
+                 )
+        width = max([i for i, _ in points])
+        height = max([i for _, i in points])
+
         with Canvas(cr):
-            #boat = self.images.boat_hull
-            cr.translate(self.boat.x * self.grid_spacing, self.boat.y * self.grid_spacing)
-            cr.rotate(-self.boat.angle)
-            #print 360/(2*math.pi) * (self.boat.angle)
-            cr.translate(-boat.props.width/2, -boat.props.height/2)
-            #boat.render_cairo(cr)
-            cr.set_source_rgba(0, 0, 0, 1)
-            cr.rectangle(0, 0, 200, 100)
+            cr.translate(self.boat.x * self.grid_spacing, -self.boat.y * self.grid_spacing)
+            cr.rotate(self.boat.angle-math.pi)
+            cr.translate(-width/2, -height/2)
+
+            cr.set_source_rgba(*self.color_boat_fill)
+
+            cr.move_to(*points[0])
+            for x, y in points:
+                cr.line_to(x, y)
+            cr.close_path()
+
+            cr.fill_preserve()
+
+            cr.set_source_rgba(*self.color_boat_stroke)
+            cr.set_line_width(7)
+            cr.set_line_join(cairo.LINE_JOIN_BEVEL)
             cr.stroke()
 
     def on_draw(self, widget, cr):
         w, h = self.get_size()
         if self.tracking_boat:
             cr.translate((w/2) - self.boat.x * self.grid_spacing * self.scale,
-                         (h/2) - self.boat.y * self.grid_spacing * self.scale)
+                         (h/2) + self.boat.y * self.grid_spacing * self.scale)
         else:
             cr.translate((w/2) + self.translation_x * self.scale,
                          (h/2) + self.translation_y * self.scale)
@@ -269,7 +289,7 @@ class SimWindow(Gtk.Window):
 
     def update_boat(self):
         #self.boat.update(time.time())
-        self.boat.x += 0.01
+        self.boat.y += 0.01
         self.repaint()
         return True
 

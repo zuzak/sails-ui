@@ -159,7 +159,8 @@ class SimWindow(Gtk.Window):
                    'longitude',
                    'heading',
                    'sail_angle',
-                   'rudder_angle'
+                   'rudder_angle',
+                   'speed',
                  )
 
         with Canvas(cr):
@@ -244,6 +245,7 @@ class SimWindow(Gtk.Window):
             cr.stroke()
 
             self.draw_rudder(cr)
+            self.draw_sail(cr)
 
     def draw_rudder(self, cr):
         rudder_length = 35
@@ -253,6 +255,19 @@ class SimWindow(Gtk.Window):
             cr.rotate(self.boat.rudder_angle+math.pi)
             cr.move_to(0, 0)
             cr.line_to(0, rudder_length)
+            cr.set_source_rgba(*self.color_boat_stroke)
+            cr.set_line_width(rudder_width)
+            cr.set_line_cap(cairo.LINE_CAP_ROUND)
+            cr.stroke()
+
+    def draw_sail(self, cr):
+        sail_length = 125
+        sail_width = 7
+        with Canvas(cr):
+            cr.translate(50, 150)
+            cr.rotate(self.boat.sail_angle+math.pi)
+            cr.move_to(0, 0)
+            cr.line_to(0, sail_length)
             cr.set_line_cap(cairo.LINE_CAP_ROUND)
             cr.stroke()
 

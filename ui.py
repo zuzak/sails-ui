@@ -176,8 +176,11 @@ class SimWindow(Gtk.Window):
 
             cr.set_font_size(11)
 
+            cr.move_to(5, 75)
+            cr.show_text(' status: {}'.format(self.boat.status))
+
             for i, field in enumerate(fields):
-                cr.move_to(5, 75 + 15*i)
+                cr.move_to(5, 75 + 15*i + 15)
                 cr.show_text(' {name}: {data:0.2f}'.format(
                              name=field,
                              data=getattr(self.boat, field)))

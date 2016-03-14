@@ -154,12 +154,13 @@ class SimWindow(Gtk.Window):
     def draw_debug_pane(self, cr):
         w, h = self.get_size()
 
-        fields = [
-                   'x',
-                   'y',
+        fields = (
+                   'latitude',
+                   'longitude',
                    'heading',
-                   'sail-angle'
-                 ]
+                   'sail_angle',
+                   'rudder_angle'
+                 )
 
         with Canvas(cr):
             cr.identity_matrix()
@@ -240,6 +241,19 @@ class SimWindow(Gtk.Window):
             cr.set_source_rgba(*self.color_boat_stroke)
             cr.set_line_width(7)
             cr.set_line_join(cairo.LINE_JOIN_BEVEL)
+            cr.stroke()
+
+            self.draw_rudder(cr)
+
+    def draw_rudder(self, cr):
+        rudder_length = 35
+        rudder_width = 7
+        with Canvas(cr):
+            cr.translate(50, 0)
+            cr.rotate(self.boat.rudder_angle+math.pi)
+            cr.move_to(0, 0)
+            cr.line_to(0, rudder_length)
+            cr.set_line_cap(cairo.LINE_CAP_ROUND)
             cr.stroke()
 
     def on_draw(self, widget, cr):

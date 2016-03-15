@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from collections import namedtuple
+from collections import deque
 import math
 import time
 
@@ -72,6 +73,9 @@ class SimWindow(Gtk.Window):
         self.color_boat_stroke  = (0.32, 0.06, 0,   1)
         self.font = ('Sans', cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
         self.font_debug = ('Monospace', cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+
+        self.past_points = deque([], 100000)
+        self.past_point_i = 0
 
     def repaint(self):
         self.queue_draw()
@@ -271,6 +275,17 @@ class SimWindow(Gtk.Window):
             cr.set_line_cap(cairo.LINE_CAP_ROUND)
             cr.stroke()
 
+    def draw_trail(self, cr):
+        with Canvas(cr):
+            cr.set_line_width(30)
+            cr.set_source_rgba(1, 1, 1, 0.5)
+            cr.set_dash((100,))
+            x, y = self.past_points[0]
+            cr.move_to(x, -y)
+            for x, y in self.past_points:
+                cr.line_to(x, -y)
+            cr.stroke()
+
     def on_draw(self, widget, cr):
         w, h = self.get_size()
         if self.tracking_boat:
@@ -283,6 +298,8 @@ class SimWindow(Gtk.Window):
 
         cr.set_source_rgba(*self.color_background)
         cr.paint()
+
+        self.draw_trail(cr)
 
         for i in range(-self.grid_n, self.grid_n):
             self.draw_x_gridline(cr, i)
@@ -308,6 +325,9 @@ class SimWindow(Gtk.Window):
 
     def update_boat(self):
         self.boat.update()
+        if self.past_point_i % 10 == 0:
+            self.past_points.append((self.boat.x*100, self.boat.y*100))
+        self.past_point_i += 1
         self.repaint()
         return True
 

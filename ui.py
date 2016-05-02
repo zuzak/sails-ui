@@ -307,11 +307,7 @@ class SimWindow(Gtk.Window):
             self.draw_x_line(cr, i)
         self.draw_boat(cr)
 
-        cr.set_source_rgba(*self.color_text)
-        cr.select_font_face(*self.font)
-        cr.set_font_size(20)
-        cr.move_to(10, 40)
-        cr.show_text('hello')
+        cr.set_source_rgba(*self.color_gridline)
 
         cr.set_line_width(1)
         cr.move_to(-(self.grid_width + 0.5), 0.5)

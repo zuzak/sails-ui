@@ -187,7 +187,7 @@ class SimWindow(Gtk.Window):
 
             for i, field in enumerate(fields):
                 cr.move_to(5, 75 + 15*i + 15)
-                cr.show_text(' {name}: {data:0.2f}'.format(
+                cr.show_text(' {name}: {data:0.5f}'.format(
                              name=field,
                              data=getattr(self.boat, field)))
 

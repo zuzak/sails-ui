@@ -37,10 +37,12 @@ class Wind(object):
         self.y = 0
 
 
+
 class SimWindow(Gtk.Window):
-    def __init__(self, boat, waypoints):
+    def __init__(self, boat, waypoints, wind):
         self.boat = boat
         self.waypoints = waypoints
+        self.wind = wind
         print waypoints
 
         self.fps = 60
@@ -192,8 +194,41 @@ class SimWindow(Gtk.Window):
             cr.move_to(5, 75)
             cr.show_text(' status: {}'.format(self.boat.status))
 
+            cr.move_to(5, 100)
+            points = [
+                'port luff',
+                'port luff',
+                'port close-hauled',
+                'port close reach',
+                'port close reach',
+                'port beam reach',
+                'port beam reach',
+                'port broad reach',
+                'port broad reach',
+                'port broad reach',
+                'port broad reach',
+                'port run',
+                'port run',
+                'stbd run',
+                'stbd run',
+                'stbd broad reach',
+                'stbd broad reach',
+                'stbd broad reach',
+                'stbd broad reach',
+                'stbd beam reach',
+                'stbd beam reach',
+                'stbd close reach',
+                'stbd close reach',
+                'stbd close haul',
+                'stbd luff',
+                'stbd luff',
+            ]
+
+            cr.show_text(' point: {}'.format(points[int((math.degrees((self.boat.heading) - self.wind.angle)+180) % 360 // 15 )]))
+
+
             for i, field in enumerate(fields):
-                cr.move_to(5, 75 + 15*i + 15)
+                cr.move_to(5, 100 + 15*i + 15)
                 cr.show_text(' {name}: {data:0.5f}'.format(
                              name=field,
                              data=getattr(self.boat, field)))
@@ -349,6 +384,7 @@ class SimWindow(Gtk.Window):
         return True
 
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='UI for sailsd')
     parser.add_argument('--waypoints', action='store', dest='waypoints_file',
@@ -375,9 +411,10 @@ if __name__ == '__main__':
 
 
     boat = sailsd.Boat()
+    wind = sailsd.Wind()
 
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-    win = SimWindow(boat, waypoints=waypoints)
+    win = SimWindow(boat, waypoints=waypoints, wind=wind)
     win.connect('delete-event', Gtk.main_quit)
     win.show_all()
 

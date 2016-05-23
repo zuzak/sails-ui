@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
+import argparse
 from collections import namedtuple
 from collections import deque
 import math
+import signal
 import time
 
 from gi.repository import Gtk
@@ -36,8 +38,11 @@ class Wind(object):
 
 
 class SimWindow(Gtk.Window):
-    def __init__(self, boat):
+    def __init__(self, boat, waypoints):
         self.boat = boat
+        self.waypoints = waypoints
+        print waypoints
+
         self.fps = 60
         GLib.timeout_add(1000.0/self.fps, self.update_boat)
 
@@ -60,7 +65,7 @@ class SimWindow(Gtk.Window):
         self.tracking_boat = True
         self.show_debug = True
 
-        self.scale = 1
+        self.scale = 0.7
         self.translation_x, self.translation_y = 0, 0
         self.grid_width = 10000
         self.grid_spacing = 100
@@ -288,6 +293,18 @@ class SimWindow(Gtk.Window):
                 cr.line_to(x, -y)
             cr.stroke()
 
+    def draw_waypoints(self, cr):
+        E_RADIUS = 6378000
+        with Canvas(cr):
+            for point in self.waypoints:
+                # FIXME: abstract the slightly grim projection code away
+                lat = E_RADIUS * (point[0] / ((180 / math.pi) /
+                                math.cos(point[0] * math.pi/180)))
+                lon = E_RADIUS * (point[1] / (180 / math.pi))
+                cr.arc(100*lon, -100*lat, 50, 0, 2*math.pi)
+                cr.set_source_rgba(1, 0.6, 0, 1)
+                cr.fill()
+
     def on_draw(self, widget, cr):
         w, h = self.get_size()
         if self.tracking_boat:
@@ -302,6 +319,8 @@ class SimWindow(Gtk.Window):
         cr.paint()
 
         self.draw_trail(cr)
+
+        self.draw_waypoints(cr)
 
         for i in range(-self.grid_n, self.grid_n):
             self.draw_x_gridline(cr, i)
@@ -331,14 +350,34 @@ class SimWindow(Gtk.Window):
 
 
 if __name__ == '__main__':
-    import signal
-    import os
-    import json
+    parser = argparse.ArgumentParser(description='UI for sailsd')
+    parser.add_argument('--waypoints', action='store', dest='waypoints_file',
+                        help='Optional configuration file to load waypoint '
+                             'locations from.')
+
+    results = parser.parse_args()
+
+    waypoints_file = results.waypoints_file
+    if waypoints_file is not None:
+        with open(waypoints_file) as f:
+            waypoints_conf = yaml.load(f)
+            points = waypoints_conf.get('points')
+
+            lat_long_points = []
+            for point in points:
+                lat, lon = point.split(',')
+                lat_long_points.append((float(lat), float(lon)))
+
+            waypoints = lat_long_points
+
+    else:
+        waypoints = None
+
 
     boat = sailsd.Boat()
 
     signal.signal(signal.SIGINT, signal.SIG_DFL)
-    win = SimWindow(boat)
+    win = SimWindow(boat, waypoints=waypoints)
     win.connect('delete-event', Gtk.main_quit)
     win.show_all()
 

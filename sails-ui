@@ -10,6 +10,8 @@ from gi.repository import Gdk
 from gi.repository import GLib
 import cairo
 
+import yaml
+
 import sailsd
 
 Keys = namedtuple('Keys', '''up down left right esc ctrl ctrl_right f11 space backtick''')
@@ -279,7 +281,7 @@ class SimWindow(Gtk.Window):
         with Canvas(cr):
             cr.set_line_width(30)
             cr.set_source_rgba(1, 1, 1, 0.5)
-            cr.set_dash((100,))
+            #cr.set_dash((100,))
             x, y = self.past_points[0]
             cr.move_to(x, -y)
             for x, y in self.past_points:
